@@ -5,10 +5,8 @@
 pub mod factor;
 pub mod notation;
 
-use std::cmp::Ordering;
-
 use factor::Factoring;
-use notation::AlgNotation;
+use notation::Notation;
 
 /// Provides additional true/false information about numbers
 pub trait NumericFlags {
@@ -43,35 +41,20 @@ impl NumericFlags for i32 {
     }
 }
 
-/// If the square root of n can be expressed as an integer, returns that integer. Otherwise returns [`None`].
-pub fn sqrt_i(n: i32) -> Option<i32> {
-    match n {
-        ..=-1 => None,
-        0..=1 => Some(n),
-        2.. => {
-            let mut root = 2;
-            loop {
-                match (root * root).cmp(&n) {
-                    Ordering::Less => root += 1,
-                    Ordering::Equal => break Some(root),
-                    Ordering::Greater => break None,
-                }
-            }
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    const ODDS: [i32; 10] = [1, 3, 5, 7, 9, 11, 13, 15, 17, 19];
+    const EVENS: [i32; 10] = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+
     #[test]
     fn test_is_odd() {
-        for odd in [1, 3, 5, 7, 9, 11, 13, 15, 17, 19] {
+        for odd in ODDS {
             assert!(odd.is_odd());
             assert!((-odd).is_odd());
         }
-        for even in [2, 4, 6, 8, 10, 12, 14, 16, 18, 20] {
+        for even in EVENS {
             assert!(!even.is_odd());
             assert!(!(-even).is_odd());
         }
@@ -80,24 +63,27 @@ mod tests {
 
     #[test]
     fn test_is_even() {
-        for odd in [1, 3, 5, 7, 9, 11, 13, 15, 17, 19] {
+        for odd in ODDS {
             assert!(!odd.is_even());
             assert!(!(-odd).is_even());
         }
-        for even in [2, 4, 6, 8, 10, 12, 14, 16, 18, 20] {
+        for even in EVENS {
             assert!(even.is_even());
             assert!((-even).is_even());
         }
         assert!(0.is_even());
     }
 
+    const PRIMES: [i32; 10] = [1, 2, 3, 5, 7, 11, 13, 17, 19, 23];
+    const COMPOSITES: [i32; 10] = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18];
+
     #[test]
     fn test_is_prime() {
-        for prime in [1, 2, 3, 5, 7, 11, 13, 17, 19] {
+        for prime in PRIMES {
             assert!(prime.is_prime());
             assert!((-prime).is_prime());
         }
-        for composite in [4, 6, 8, 9, 10, 12, 14, 15, 16, 18] {
+        for composite in COMPOSITES {
             assert!(!composite.is_prime());
             assert!(!(-composite).is_prime());
         }
@@ -106,11 +92,11 @@ mod tests {
 
     #[test]
     fn test_is_composite() {
-        for prime in [1, 2, 3, 5, 7, 11, 13, 17, 19] {
+        for prime in PRIMES {
             assert!(!prime.is_composite());
             assert!(!(-prime).is_composite());
         }
-        for composite in [4, 6, 8, 9, 10, 12, 14, 15, 16, 18] {
+        for composite in COMPOSITES {
             assert!(composite.is_composite());
             assert!((-composite).is_composite());
         }

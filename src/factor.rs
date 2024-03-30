@@ -1,6 +1,6 @@
 //! Functions related to factoring numbers.
 
-use crate::notation::atom::AlgAtom;
+use crate::notation::atom::Atom;
 
 /// A single factor of a number.
 ///
@@ -191,14 +191,14 @@ pub fn gcf<const COUNT: usize>(ns: [i32; COUNT]) -> i32 {
 /// let not_huge = 2 << 17; // A big number; but its LCM isn't Huge.
 /// assert_eq!(lcm([not_huge, not_huge]), not_huge);
 /// ```
-pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> AlgAtom {
+pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> Atom {
     assert!(COUNT > 0, "Empty set has no multiples.");
 
     let mut prod: i32 = 1;
     for n in &ns {
         match prod.checked_mul(*n) {
             Some(p) => prod = p,
-            None => return AlgAtom::Huge,
+            None => return Atom::Huge,
         }
     }
     let prod = prod;
@@ -208,11 +208,11 @@ pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> AlgAtom {
 
     for lcm in abs_max..prod {
         if lcm.is_common_multiple_of(&abs_ns) {
-            return AlgAtom::from(lcm);
+            return Atom::from(lcm);
         }
     }
 
-    AlgAtom::from(prod)
+    Atom::from(prod)
 }
 
 #[cfg(test)]

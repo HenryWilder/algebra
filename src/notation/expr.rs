@@ -2,16 +2,12 @@
 
 pub mod fraction;
 pub mod radical;
+pub mod simplify;
 
-use crate::AlgNotation;
+use crate::Notation;
 use fraction::Fraction;
 use radical::Radical;
-
-/// An expression capable of being simplified.
-pub trait Simplify {
-    /// Returns the simplest form of the expression.
-    fn simplified(&self) -> AlgNotation;
-}
+use simplify::Simplify;
 
 /// Algebraic Expression.
 ///
@@ -27,26 +23,26 @@ pub trait Simplify {
 /// </div>
 ///
 /// ```
-/// # use algebra::notation::{AlgNotation, expr::{fraction::Fraction, radical::Radical, AlgExpr, Simplify}};
-/// let a = AlgExpr::from(Fraction::from_ints(1, 5));
-/// let b = AlgExpr::from(Fraction::from_ints(1, 5));
+/// # use algebra::notation::{Notation, expr::{fraction::Fraction, radical::Radical, Expr, Simplify}};
+/// let a = Expr::from(Fraction::from_ints(1, 5));
+/// let b = Expr::from(Fraction::from_ints(1, 5));
 /// assert_eq!(a, b);
 ///
-/// let a = AlgExpr::from(Radical::from_ints(1, 5));
-/// let b = AlgExpr::from(Radical::from_ints(1, 5));
+/// let a = Expr::from(Radical::new(5));
+/// let b = Expr::from(Radical::new(5));
 /// assert_eq!(a, b);
 ///
-/// let a = AlgExpr::from(Radical::from_ints(1, 1));
-/// let b = AlgExpr::from(Fraction::from_ints(1, 1));
+/// let a = Expr::from(Radical::from(1));
+/// let b = Expr::from(Fraction::from(1));
 /// assert_ne!(a, b); // Even though both are equal to 1
 ///
-/// let a = AlgExpr::from(Radical::from_ints(1, 8));
-/// let b = AlgExpr::from(Radical::from_ints(2, 2));
+/// let a = Expr::from(Radical::new(8));
+/// let b = Expr::from(Radical{ coef: 2, rad: 2 });
 /// assert_ne!(a, b); // Even though they are equivalent mathematically
-/// assert_eq!(a.simplified(), AlgNotation::Expr(b)); // They need to be simplified first
+/// assert_eq!(a.simplified(), Notation::Expr(b)); // They need to be simplified first
 /// ```
-#[derive(Debug)]
-pub enum AlgExpr {
+#[derive(Debug, PartialEq)]
+pub enum Expr {
     /// A fraction.
     ///
     /// See [`Fraction`]
@@ -58,55 +54,81 @@ pub enum AlgExpr {
     Radical(Radical),
 }
 
-impl Simplify for AlgExpr {
-    fn simplified(&self) -> AlgNotation {
-        use AlgExpr::*;
+impl Expr {
+    /// If the expression represents a [`Fraction`], returns that fraction. Otherwise returns [`None`].
+    pub fn fraction(self) -> Option<Fraction> {
         match self {
-            Fraction(f) => f.simplified(),
-            Radical(r) => r.simplified(),
+            Expr::Fraction(frac) => Some(frac),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the expression represents a [`Fraction`], false otherwise.
+    pub fn is_fraction(&self) -> bool {
+        match self {
+            Expr::Fraction(_) => true,
+            _ => false,
+        }
+    }
+
+    /// If the expression represents a [`Radical`], returns that radical. Otherwise returns [`None`].
+    pub fn radical(self) -> Option<Radical> {
+        match self {
+            Expr::Radical(rad) => Some(rad),
+            _ => None,
+        }
+    }
+
+    /// Returns true if the expression represents a [`Radical`], false otherwise.
+    pub fn is_radical(&self) -> bool {
+        match self {
+            Expr::Radical(_) => true,
+            _ => false,
         }
     }
 }
 
-impl ToString for AlgExpr {
+impl Simplify for Expr {
+    fn simplify(self) -> Notation {
+        use Expr::*;
+        match self {
+            Fraction(f) => f.simplify(),
+            Radical(r) => r.simplify(),
+        }
+    }
+}
+
+impl ToString for Expr {
     fn to_string(&self) -> String {
         todo!()
     }
 }
 
-impl From<Fraction> for AlgExpr {
+// # Conversion
+
+// ## Fraction
+
+impl From<Fraction> for Expr {
     fn from(value: Fraction) -> Self {
-        AlgExpr::Fraction(value)
+        Expr::Fraction(value)
     }
 }
 
-impl From<Radical> for AlgExpr {
+// ## Radical
+
+impl From<Radical> for Expr {
     fn from(value: Radical) -> Self {
-        AlgExpr::Radical(value)
+        Expr::Radical(value)
     }
 }
 
-impl std::cmp::PartialEq for AlgExpr {
-    fn eq(&self, other: &Self) -> bool {
-        use AlgExpr::*;
-        // I want to get errors when I add a new AlgExpr type without an equality test.
-        #[allow(unreachable_patterns)]
-        match (self, other) {
-            (Fraction(frac_a), Fraction(frac_b)) => frac_a == frac_b,
-            (Radical(rad_a), Radical(rad_b)) => rad_a == rad_b,
+// # Equality
 
-            // Because we are expecting a simplified value, we already know that a radical and non-radical aren't equal.
-            (Radical(_), _) | (_, Radical(_)) => false,
+// ## Fraction
 
-            // Because we are expecting a simplified value, we already know that a fraction and non-fraction aren't equal.
-            (Fraction(_), _) | (_, Fraction(_)) => false,
-        }
-    }
-}
-
-impl std::cmp::PartialEq<Fraction> for AlgExpr {
+impl std::cmp::PartialEq<Fraction> for Expr {
     fn eq(&self, other: &Fraction) -> bool {
-        use AlgExpr::*;
+        use Expr::*;
         if let Fraction(frac) = self {
             frac == other
         } else {
@@ -115,9 +137,11 @@ impl std::cmp::PartialEq<Fraction> for AlgExpr {
     }
 }
 
-impl std::cmp::PartialEq<Radical> for AlgExpr {
+// ## Radical
+
+impl std::cmp::PartialEq<Radical> for Expr {
     fn eq(&self, other: &Radical) -> bool {
-        use AlgExpr::*;
+        use Expr::*;
         if let Radical(rad) = self {
             rad == other
         } else {
