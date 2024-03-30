@@ -136,15 +136,15 @@ impl From<i32> for Atom {
     }
 }
 
-impl ToString for Atom {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Atom {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Atom::*;
         match self {
-            Number(num) => num.to_string(),
-            Complex => "𝑖".to_string(),
-            Undefined => "∅".to_string(),
-            Huge => "𝓗".to_string(),
-            Epsilon => "ε".to_string(),
+            Number(num) => num.fmt(f),
+            Complex => "𝑖".fmt(f),
+            Undefined => "∅".fmt(f),
+            Huge => "𝓗".fmt(f),
+            Epsilon => "ε".fmt(f),
         }
     }
 }

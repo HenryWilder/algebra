@@ -83,12 +83,12 @@ impl std::ops::Mul<i32> for Radical {
     }
 }
 
-impl ToString for Radical {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Radical {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match (self.coef, self.rad) {
-            (c @ (..=0 | 2..), r @ (..=0 | 2..)) => format!("{c}√{r}"),
-            (1, r @ (..=0 | 2..)) => format!("√{r}"),
-            (c, 1) => format!("{c}"),
+            (c @ (..=0 | 2..), r @ (..=0 | 2..)) => format!("{c}√{r}").fmt(f),
+            (1, r @ (..=0 | 2..)) => format!("√{r}").fmt(f),
+            (c, 1) => c.fmt(f),
         }
     }
 }

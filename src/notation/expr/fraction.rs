@@ -49,9 +49,10 @@ impl Fraction {
     }
 }
 
-impl ToString for Fraction {
-    fn to_string(&self) -> String {
-        format!("{}/{}", self.num.to_string(), self.den.to_string())
+impl std::fmt::Display for Fraction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self { num, den } = self;
+        format!("{num}/{den}").fmt(f)
     }
 }
 

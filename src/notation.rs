@@ -55,12 +55,12 @@ pub enum Notation {
     Expr(Expr),
 }
 
-impl ToString for Notation {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for Notation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Notation::*;
         match self {
-            Atom(atom) => atom.to_string(),
-            Expr(expr) => expr.to_string(),
+            Atom(atom) => atom.fmt(f),
+            Expr(expr) => expr.fmt(f),
         }
     }
 }

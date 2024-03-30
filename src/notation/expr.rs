@@ -98,9 +98,13 @@ impl Simplify for Expr {
     }
 }
 
-impl ToString for Expr {
-    fn to_string(&self) -> String {
-        todo!()
+impl std::fmt::Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use Expr::*;
+        match self {
+            Fraction(frac) => frac.fmt(f),
+            Radical(rad) => rad.fmt(f),
+        }
     }
 }
 
