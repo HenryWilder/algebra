@@ -17,6 +17,7 @@ pub trait Simplify {
 ///
 /// Notation representing an algebraic expression.
 /// Expressions can be simplified.
+#[derive(Debug)]
 pub enum AlgExpr {
     /// A fraction.
     ///
@@ -44,5 +45,28 @@ impl From<Fraction> for AlgExpr {
 impl From<Radical> for AlgExpr {
     fn from(value: Radical) -> Self {
         AlgExpr::Radical(value)
+    }
+}
+
+impl std::cmp::PartialEq for AlgExpr {
+    /// <div class="warning">
+    ///
+    /// **Does not simplify.** Fractions are not considered equal to radicals, even if they are mathematically equivalent.
+    /// This operation is intended only to be used on notation that has already been simplified.
+    ///
+    /// </div>
+    fn eq(&self, other: &Self) -> bool {
+        // I want to get errors when I add a new AlgExpr type without an equality test.
+        #[allow(unreachable_patterns)]
+        match (self, other) {
+            (AlgExpr::Fraction(frac_a), AlgExpr::Fraction(frac_b)) => frac_a == frac_b,
+            (AlgExpr::Radical(rad_a), AlgExpr::Radical(rad_b)) => rad_a == rad_b,
+
+            // Because we are expecting a simplified value, we already know that a radical and non-radical aren't equal.
+            (AlgExpr::Radical(_), _) | (_, AlgExpr::Radical(_)) => false,
+
+            // Because we are expecting a simplified value, we already know that a fraction and non-fraction aren't equal.
+            (AlgExpr::Fraction(_), _) | (_, AlgExpr::Fraction(_)) => false,
+        }
     }
 }

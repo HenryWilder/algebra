@@ -1,41 +1,10 @@
 //! Functions related to factoring numbers.
 
-/// A factor shared among multiple numbers.
-///
-/// Produced by [`common_factors()`].
-pub struct CommonFactor {
-    /// The factor itself.
-    pub common: i32,
-
-    /// The numbers multiplied by `common` to result in the original numbers being factored.
-    pub associated: Vec<i32>,
-}
-
-/// Given a set of numbers, returns the factors shared between them.
-pub fn common_factors(ns: Vec<i32>) -> Vec<CommonFactor> {
-    let mut factors = Vec::from([CommonFactor {
-        common: 1,
-        associated: ns.clone(),
-    }]);
-
-    let ns_iter = ns.into_iter();
-    let abs_ns = ns_iter.clone().map(|n| n.abs());
-
-    for i in 2..=abs_ns.clone().min().unwrap() {
-        if abs_ns.clone().all(|x| x % i == 0) {
-            factors.push(CommonFactor {
-                common: i,
-                associated: ns_iter.clone().map(|x| x / i).collect(),
-            });
-        }
-    }
-
-    factors
-}
+use crate::notation::atom::AlgAtom;
 
 /// A single factor of a number.
 ///
-/// Produced by [`factors()`].
+/// Produced by [`factors()`][Factoring::factors()].
 pub struct Factor {
     /// The factor itself.
     pub common: i32,
@@ -44,28 +13,223 @@ pub struct Factor {
     pub associated: i32,
 }
 
-impl From<CommonFactor> for Factor {
-    fn from(CommonFactor { common, associated }: CommonFactor) -> Self {
-        debug_assert_eq!(associated.len(), 1);
-        Self {
-            common,
-            associated: associated[0],
+/// A factor shared among multiple numbers.
+///
+/// Produced by [`common_factors()`].
+pub struct CommonFactor<const COUNT: usize> {
+    /// The factor itself.
+    pub common: i32,
+
+    /// The numbers multiplied by `common` to result in the original numbers being factored.
+    pub associated: [i32; COUNT],
+}
+
+/// Trait for types which can be factored.
+pub trait Factoring: Sized {
+    /// Test if `self` is a multiple of `other`.
+    fn is_multiple_of(&self, other: Self) -> bool;
+
+    /// Test if `other` is a multiple of `self`,
+    /// making `self` a factor of `other`.
+    fn is_factor_of(&self, other: Self) -> bool;
+
+    /// Test if all others are evenly divisible by this number,
+    /// making it a common factor among all of them.
+    fn is_common_factor_of<const COUNT: usize>(&self, others: &[Self; COUNT]) -> bool;
+
+    /// Test this number is evenly divisible by all others,
+    /// making it a common multiple among all of them.
+    fn is_common_multiple_of<const COUNT: usize>(&self, others: &[Self; COUNT]) -> bool;
+
+    /// Returns all factors for the given number.
+    fn factors(&self) -> Vec<Factor>;
+
+    /// Returns the number of factors the given number has.
+    ///
+    /// **Note:** This is cheaper than constructing a list of all the factors, but **not free**.\
+    /// If you need to use the factors anyway, find the [`len`][Vec::len] of [`factors`][Factoring::factors] instead.
+    fn count_factors(&self) -> usize;
+
+    /// Returns true if the number is composite, false if it is prime.
+    ///
+    /// Employs logical short-circuiting, stopping on the first factor that isn't 1.
+    ///
+    /// Used in [`is_prime`][crate::NumericFlags::is_prime()].
+    fn has_multiple_factors(&self) -> bool;
+}
+
+impl Factoring for i32 {
+    fn is_multiple_of(&self, other: Self) -> bool {
+        self % other == 0
+    }
+
+    fn is_factor_of(&self, other: Self) -> bool {
+        other.is_multiple_of(*self)
+    }
+
+    fn is_common_factor_of<const COUNT: usize>(&self, others: &[Self; COUNT]) -> bool {
+        others.iter().all(|other| self.is_factor_of(*other))
+    }
+
+    fn is_common_multiple_of<const COUNT: usize>(&self, others: &[Self; COUNT]) -> bool {
+        others.iter().all(|other| self.is_multiple_of(*other))
+    }
+
+    fn factors(&self) -> Vec<Factor> {
+        let mut factors = Vec::from([Factor {
+            common: 1,
+            associated: *self,
+        }]);
+
+        let abs_n = self.abs();
+
+        // Potential factor
+        for pot_fac in 2..abs_n {
+            if pot_fac.is_factor_of(abs_n) {
+                let fac = pot_fac; // Confirmed
+                factors.push(Factor {
+                    common: fac,
+                    associated: self / fac,
+                });
+            }
         }
+
+        factors
+    }
+
+    fn count_factors(&self) -> usize {
+        let abs_n = self.abs();
+
+        let mut count = 1; // 1 is always a factor.
+
+        // Potential factor
+        for pot_fac in 2..abs_n {
+            if pot_fac.is_factor_of(abs_n) {
+                count += 1;
+            }
+        }
+
+        count
+    }
+
+    fn has_multiple_factors(&self) -> bool {
+        let abs_n = self.abs();
+
+        for fac in 2..abs_n {
+            if fac.is_factor_of(abs_n) {
+                return true;
+            }
+        }
+
+        false
     }
 }
 
-/// Given a number, returns its factors.
-pub fn factors(n: i32) -> Vec<Factor> {
-    common_factors(vec![n])
-        .iter()
-        .map(|CommonFactor { common, associated }| Factor {
-            common: *common,
-            associated: associated[0],
-        })
-        .collect()
+/// Given a set of numbers, returns the factors shared between them.
+pub fn common_factors<const COUNT: usize>(ns: [i32; COUNT]) -> Vec<CommonFactor<COUNT>> {
+    assert!(COUNT > 0, "Empty set has no factors.");
+
+    let mut factors = Vec::from([CommonFactor {
+        common: 1,
+        associated: ns,
+    }]);
+
+    let abs_ns = ns.map(|n| n.abs());
+    let abs_min = *abs_ns.iter().min().unwrap();
+
+    for fac in 2..=abs_min {
+        if fac.is_common_factor_of(&abs_ns) {
+            factors.push(CommonFactor {
+                common: fac,
+                associated: ns.map(|x| x / fac),
+            });
+        }
+    }
+
+    factors
 }
 
 /// Returns the Greatest Common Factor of the provided numbers.
-pub fn gcf(ns: Vec<i32>) -> i32 {
-    todo!()
+pub fn gcf<const COUNT: usize>(ns: [i32; COUNT]) -> i32 {
+    assert!(COUNT > 0, "Empty set has no factors.");
+
+    let abs_ns = ns.map(|x| x.abs());
+    let n_min = *abs_ns.iter().min().unwrap();
+
+    for gcf in (2..=n_min).rev() {
+        if gcf.is_common_factor_of(&abs_ns) {
+            return gcf;
+        }
+    }
+
+    1 // 1 is a factor of every number, so we don't need to bother testing `is_factor_of` on it.
+}
+
+/// Returns the Least Common Multiple of the provided numbers.
+///
+/// ```
+/// # use algebra::factor::lcm;
+/// assert_eq!(lcm([ 4,  5]),  20);
+/// assert_eq!(lcm([ 2, 12]),  12);
+/// assert_eq!(lcm([ 8,  8]),   8);
+/// assert_eq!(lcm([ 5, 21]), 105);
+/// assert_eq!(lcm([16, 20]),  80);
+/// ```
+///
+/// <div class="warning">
+///
+/// As it is currently implemented, this might mark some LCMs as huge when they aren't.
+///
+/// ### Consider the case of lcm(2^17, 2^17)
+/// The LCM is 2^17, because they are the same, but the product is Huge.\
+/// This function will return Huge for this pair; even though the LCM (2^17) isn't Huge.
+///
+/// </div>
+///
+/// ```should_panic
+/// # use algebra::factor::lcm;
+/// let not_huge = 2 << 17; // A big number; but its LCM isn't Huge.
+/// assert_eq!(lcm([not_huge, not_huge]), not_huge);
+/// ```
+pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> AlgAtom {
+    assert!(COUNT > 0, "Empty set has no multiples.");
+
+    let mut prod: i32 = 1;
+    for n in &ns {
+        match prod.checked_mul(*n) {
+            Some(p) => prod = p,
+            None => return AlgAtom::Huge,
+        }
+    }
+    let prod = prod;
+
+    let abs_ns = ns.map(|x| x.abs());
+    let abs_max = *abs_ns.iter().max().unwrap();
+
+    for lcm in abs_max..prod {
+        if lcm.is_common_multiple_of(&abs_ns) {
+            return AlgAtom::from(lcm);
+        }
+    }
+
+    AlgAtom::from(prod)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_factor_of() {
+        for fac in 1..5 {
+            for i in -20..20 {
+                assert_eq!(fac.is_factor_of(i), i % fac == 0);
+            }
+        }
+    }
+
+    #[test]
+    fn test_lcm() {
+        assert_eq!(lcm([2, 12]), 12);
+    }
 }

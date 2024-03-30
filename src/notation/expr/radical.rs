@@ -1,15 +1,15 @@
 //! Roots of numbers.
 
 use crate::{
-    factor::{factors, Factor},
+    factor::{Factor, Factoring},
     notation::{expr::Simplify, AlgAtom, AlgNotation},
     sqrt_i,
 };
-use std::ops;
 
 /// The root of some number.
 ///
 /// <div class="warning"> Currently only supports square roots. </div>
+#[derive(Debug, PartialEq, Eq)]
 pub struct Radical {
     /// The coefficient.
     ///
@@ -22,12 +22,14 @@ pub struct Radical {
     pub rad: i32,
 }
 
-impl Radical {
+impl Default for Radical {
     /// Construct a new radical representing the whole number 1.
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self { coef: 1, rad: 1 }
     }
+}
 
+impl Radical {
     /// Construct a new radical from integer coefficient and radicand.
     pub fn from_ints(coef: i32, rad: i32) -> Self {
         Self { coef, rad }
@@ -41,7 +43,7 @@ impl Radical {
     }
 }
 
-impl ops::Mul<i32> for Radical {
+impl std::ops::Mul<i32> for Radical {
     type Output = Self;
 
     fn mul(self, rhs: i32) -> Self::Output {
@@ -71,15 +73,17 @@ impl Simplify for Radical {
             2.. => {
                 if let Some(root) = sqrt_i(self.rad) {
                     // Simple
+
                     AlgNotation::from(self.coef * root)
                 } else {
-                    // Perfect squares algorithm
+                    // Perfect squares
+
                     let n = self.squared();
 
                     let mut gps_fac = 1; // Greatest perfect square factor
                     let mut gps_mul = n; // Factor associated with gps_fac
 
-                    for Factor { common, associated } in factors(n) {
+                    for Factor { common, associated } in n.factors() {
                         let permutations: [(i32, i32); 2] =
                             [(common, associated), (associated, common)];
 
@@ -96,5 +100,37 @@ impl Simplify for Radical {
                 }
             }
         }
+    }
+}
+
+// todo: ordered?
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simplify_radical() {
+        // Simplifies to coefficient
+        for coef in 0..10 {
+            assert_eq!(Radical::from_ints(coef, 1).simplified(), coef);
+        }
+
+        // Simplifies to integer
+        for root in 0..10 {
+            assert_eq!(Radical::from_ints(1, root * root).simplified(), root);
+        }
+
+        // Can't be simplified
+        assert_eq!(
+            Radical::from_ints(1, 2).simplified(),
+            AlgNotation::from(Radical::from_ints(1, 2))
+        );
+
+        // Simplifies to a radical
+        assert_eq!(
+            Radical::from_ints(1, 8).simplified(),
+            AlgNotation::from(Radical::from_ints(2, 2))
+        );
     }
 }

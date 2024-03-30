@@ -9,6 +9,7 @@ use expr::{fraction::Fraction, radical::Radical, AlgExpr};
 /// Algebraic Notation.
 ///
 /// Notation representing an algebraic element.
+#[derive(Debug)]
 pub enum AlgNotation {
     /// The smallest unit, a single value.
     ///
@@ -64,5 +65,32 @@ impl From<Fraction> for AlgNotation {
 impl From<Radical> for AlgNotation {
     fn from(value: Radical) -> Self {
         Self::from(AlgExpr::Radical(value))
+    }
+}
+
+impl std::cmp::PartialEq<i32> for AlgNotation {
+    fn eq(&self, other: &i32) -> bool {
+        match self {
+            AlgNotation::Atom(atom) => atom == other,
+            _ => false, // Probably. Might wanna test the simplified form.
+        }
+    }
+}
+
+impl std::cmp::PartialEq<AlgNotation> for AlgNotation {
+    /// <div class="warning">
+    ///
+    /// **Does not simplify.** Fractions are not considered equal to radicals, even if they are mathematically equivalent.
+    /// **Does not test literal equality either.** [`Undefined`][AlgAtom::Undefined] is not equal to [`Undefined`][AlgAtom::Undefined].
+    /// This operation is intended only to be used on notation that has already been simplified.
+    ///
+    /// </div>
+    fn eq(&self, other: &Self) -> bool {
+        use AlgNotation::*;
+        match (&self, &other) {
+            (&Atom(atom_a), &Atom(atom_b)) => atom_a == atom_b,
+            (&Expr(expr_a), &Expr(expr_b)) => expr_a == expr_b,
+            (&Atom(_), &Expr(_)) | (&Expr(_), &Atom(_)) => false,
+        }
     }
 }

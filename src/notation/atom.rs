@@ -7,6 +7,7 @@ use number::Number;
 /// Algebraic Atom.
 ///
 /// The smallest unit of an algebraic expression.
+#[derive(Clone, Debug)]
 pub enum AlgAtom {
     /// An explicit integer value.
     Number(Number),
@@ -40,6 +41,39 @@ impl ToString for AlgAtom {
             Undefined => "∅".to_string(),
             Huge => "𝓗".to_string(),
             Epsilon => "ε".to_string(),
+        }
+    }
+}
+
+impl std::cmp::PartialEq<i32> for AlgAtom {
+    fn eq(&self, other: &i32) -> bool {
+        match self {
+            AlgAtom::Number(n) => n == other,
+            _ => false,
+        }
+    }
+}
+
+impl std::cmp::PartialEq<AlgAtom> for AlgAtom {
+    fn eq(&self, other: &Self) -> bool {
+        use AlgAtom::*;
+        match (self, other) {
+            (Number(num_a), Number(num_b)) => num_a == num_b,
+
+            // Number cannot be compared with non-numbers.
+            (Number(_), _) | (_, Number(_)) => false,
+
+            // As of the current implementation, two complex numbers do not have enough information to be compared.
+            (Complex, _) | (_, Complex) => false,
+
+            // As of the current implementation, two "Epsilon" numbers do not have enough information to be compared.
+            (Epsilon, _) | (_, Epsilon) => false,
+
+            // As of the current implementation, two "Huge" numbers do not have enough information to be compared.
+            (Huge, _) | (_, Huge) => false,
+
+            // In no implementation can undefined numbers be meaningfully equal to anything.
+            (Undefined, _) | (_, Undefined) => false,
         }
     }
 }
