@@ -54,9 +54,11 @@ impl std::cmp::PartialEq<i32> for AlgAtom {
     }
 }
 
-impl std::cmp::PartialEq<AlgAtom> for AlgAtom {
+impl std::cmp::PartialEq for AlgAtom {
     fn eq(&self, other: &Self) -> bool {
         use AlgAtom::*;
+        // I want to get errors when I add a new AlgAtom type without an equality test.
+        #[allow(unreachable_patterns)]
         match (self, other) {
             (Number(num_a), Number(num_b)) => num_a == num_b,
 
@@ -74,6 +76,17 @@ impl std::cmp::PartialEq<AlgAtom> for AlgAtom {
 
             // In no implementation can undefined numbers be meaningfully equal to anything.
             (Undefined, _) | (_, Undefined) => false,
+        }
+    }
+}
+
+impl std::cmp::PartialEq<Number> for AlgAtom {
+    fn eq(&self, other: &Number) -> bool {
+        use AlgAtom::*;
+        if let Number(num) = self {
+            num == other
+        } else {
+            false
         }
     }
 }
