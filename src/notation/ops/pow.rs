@@ -1,12 +1,6 @@
 //! Algebraic exponentiation
 
-use crate::notation::{
-    atom::{
-        number::Number,
-        Atom::{self, *},
-    },
-    Notation,
-};
+use crate::notation::Notation;
 
 impl Notation {
     /// Puts one value to the power of another.
@@ -16,7 +10,7 @@ impl Notation {
     /// If the result has a denominator of 0, returns [`Undefined`].\
     /// If the base and exponent are both negative, returns [`Complex`].\
     /// Otherwise returns a [`Number`] with the value of the result.
-    fn pow(self, rhs: Self) -> Self {
+    pub fn pow(self, _rhs: Self) -> Self {
         todo!()
     }
 }

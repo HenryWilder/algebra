@@ -73,6 +73,30 @@ impl Atom {
         }
     }
 
+    /// Returns true for
+    /// - [`Atom::Number`] where >= 0
+    /// - [`Huge`]
+    /// - [`Epsilon`]
+    /// and false otherwise.
+    pub fn is_positive(&self) -> bool {
+        match self {
+            Number(Number { value: 0.. }) | Huge | Epsilon => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true for
+    /// - [`Atom::Number`] where < 0
+    /// - [`NegativeHuge`]
+    /// - [`NegativeEpsilon`]
+    /// and false otherwise.
+    pub fn is_negative(&self) -> bool {
+        match self {
+            Number(Number { value: ..=-1 }) | NegativeHuge | NegativeEpsilon => true,
+            _ => false,
+        }
+    }
+
     /// Returns true for [`Complex`], false otherwise.
     pub fn is_complex(&self) -> bool {
         match self {

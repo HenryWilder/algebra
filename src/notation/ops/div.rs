@@ -1,11 +1,12 @@
 //! Algebraic division
 
+#[allow(unused_imports)]
 use crate::notation::{
     atom::{
         number::Number,
         Atom::{self, *},
     },
-    expr::fraction::Fraction,
+    expr::{fraction::Fraction, simplify::Simplify, Expr},
     Notation,
 };
 
@@ -15,98 +16,79 @@ impl std::ops::Div for Notation {
     /// Divide two values.
     ///
     /// If the result overflows, returns [`Huge`].\
-    /// If the result has a [`Huge`] denominator, returns [`Epsilon`].\
-    /// If the result has a denominator of 0, returns [`Undefined`].\
-    /// Otherwise returns a [`Number`] with the value of the result.
+    /// If the result underflows, returns [`NegativeHuge`].\
+    /// If the result has a [`Huge`] or [`NegativeHuge`] denominator, returns [`Epsilon`] if positive overall and [`NegativeEpsilon`] if overall negative.\
+    /// If the result has a denominator of 0, or contains [`Undefined`], returns [`Undefined`].\
+    /// If the result an integer, returns a [`Number`] with the value of the result.\
+    /// Otherwise returns a [`Fraction`].
     fn div(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (Notation::Atom(atom_a), Notation::Atom(atom_b)) => match (atom_a, atom_b) {
-                // Basic
-                (Number(Number { value: num }), Number(Number { value: den })) => {
-                    match (num, den) {
-                        (_, 0) => Notation::from(Undefined),
-                        (_, 1) => Notation::from(num),
-                        (_, -1) => Notation::from(-num), // Todo: i32::MAX.neg() overflows
-                        _ => Notation::from(Fraction::new(num, den)),
-                    }
+            (Notation::Atom(num), Notation::Atom(den)) => Fraction { num, den }.simplify(),
+
+            (Notation::Expr(Expr::Fraction(frac_num)), Notation::Atom(den)) => {
+                if let Notation::Atom(num) = frac_num.simplify() {
+                    Fraction { num, den }.simplify()
+                } else {
+                    todo!()
                 }
-
-                // 𝑛/𝑖 = 𝑖?
-                (_, Complex) | (Complex, _) => Notation::from(Complex),
-
-                // 𝑛/∅ = ∅
-                // 𝑛/0 = ∅
-                (_, Undefined) | (Undefined, _) | (_, Number(Number { value: 0 })) => {
-                    Notation::from(Undefined)
+            }
+            (Notation::Atom(num), Notation::Expr(Expr::Fraction(frac_den))) => {
+                if let Notation::Atom(den) = frac_den.simplify() {
+                    Fraction { num, den }.simplify()
+                } else {
+                    todo!()
                 }
-
-                // 𝓗/𝑛 | -𝓗/-𝑛 = 𝓗
-                // -𝓗/𝑛 | 𝓗/-𝑛 = -𝓗
-                // ε/𝑛 | -ε/-𝑛 = ε
-                // -ε/𝑛 | ε/-𝑛 = -ε
-                (num @ (Huge | NegativeHuge | Epsilon | NegativeEpsilon), Number(_)) => {
-                    match (num, den) {
-                        (_, 0) => Notation::from(Undefined),
-                        (_, 1) => Notation::from(num),
-                        _ => Notation::from(Fraction::new(num, den)),
-                    }
-                }
-
-                (
-                    Number(Number { value: num }),
-                    den @ (Huge | NegativeHuge | Epsilon | NegativeEpsilon),
-                ) => match num {
-                    // 0/𝑛 = 0
-                    // where 𝑛 is (-∞, 0) ∪ (0, ∞)
-                    0 => Notation::from(0),
-
-                    1.. => match den {
-                        // 𝑛/𝓗 = ε
-                        Huge => Notation::from(Epsilon),
-                        // 𝑛/-𝓗 = -ε
-                        NegativeHuge => Notation::from(NegativeEpsilon),
-                        // 𝑛/ε = 𝓗
-                        Epsilon => Notation::from(Huge),
-                        // 𝑛/-ε = -𝓗
-                        NegativeEpsilon => Notation::from(NegativeHuge),
-
-                        _ => unreachable!(),
-                    },
-
-                    ..=-1 => match den {
-                        // -𝑛/𝓗 = -ε
-                        Huge => Notation::from(NegativeEpsilon),
-                        // -𝑛/-𝓗 = ε
-                        NegativeHuge => Notation::from(Epsilon),
-                        // -𝑛/ε = -𝓗
-                        Epsilon => Notation::from(NegativeHuge),
-                        // -𝑛/-ε = 𝓗
-                        NegativeEpsilon => Notation::from(Huge),
-
-                        _ => unreachable!(),
-                    },
-                },
-
-                (
-                    num @ (Epsilon | NegativeEpsilon | Huge | NegativeHuge),
-                    den @ (Huge | NegativeHuge),
-                ) => Notation::from(match den {
-                    Huge => num,
-                    NegativeHuge => -num,
-
-                    _ => unreachable!(),
-                }),
-
-                // ε/ε | -ε/-ε = 𝓗
-                (Epsilon, Epsilon) | (NegativeEpsilon, NegativeEpsilon) => Notation::from(Huge),
-
-                // -ε/ε | ε/-ε = -𝓗
-                (NegativeEpsilon, Epsilon) | (Epsilon, NegativeEpsilon) => {
-                    Notation::from(NegativeHuge)
-                }
-            },
+            }
 
             _ => todo!(),
         }
+    }
+}
+
+#[cfg(test)]
+mod div_tests {
+    use super::*;
+
+    #[test]
+    fn test_over_one_division() {
+        for num in -10..=-10 {
+            assert_eq!(Notation::from(num) / Notation::from(1), num)
+        }
+    }
+
+    #[test]
+    fn test_over_zero_division() {
+        for num in -10..=-10 {
+            let undefined = (Notation::from(num) / Notation::from(0)).atom().unwrap();
+            assert!(undefined.is_undefined())
+        }
+    }
+
+    #[test]
+    fn test_huge_division() {
+        let huge = (Notation::from(Huge) / Notation::from(1)).atom().unwrap();
+        assert!(huge.is_positive_huge())
+    }
+
+    #[test]
+    fn test_positive_over_huge_is_epsilon() {
+        for num in 1..=10 {
+            let epsilon = (Notation::from(num) / Notation::from(Huge)).atom().unwrap();
+            assert!(epsilon.is_positive_epsilon())
+        }
+    }
+
+    #[test]
+    fn test_negative_over_huge_is_negative_epsilon() {
+        for num in -1..=-10 {
+            let epsilon = (Notation::from(num) / Notation::from(Huge)).atom().unwrap();
+            assert!(epsilon.is_negative_epsilon())
+        }
+    }
+
+    #[test]
+    fn test_zero_over_huge_is_zero() {
+        let zero = Notation::from(0) / Notation::from(Huge);
+        assert_eq!(zero, 0)
     }
 }

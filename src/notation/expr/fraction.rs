@@ -3,7 +3,7 @@
 use crate::{
     factor::{gcf, Factoring},
     notation::{
-        atom::{number::Number, Atom},
+        atom::{number, Atom},
         expr::Simplify,
         Notation,
     },
@@ -58,15 +58,28 @@ impl std::fmt::Display for Fraction {
 
 impl Simplify for Fraction {
     fn simplify(self) -> Notation {
-        match self {
-            Fraction {
-                num: Atom::Number(Number { value: num }),
-                den: Atom::Number(Number { value: den }),
-            } => {
-                if den == 0 {
-                    // Division by zero
-                    Notation::from(Atom::Undefined)
-                } else if den.is_factor_of(num) {
+        use number::Number as Num;
+        use Atom::*;
+        let Fraction { num, den } = self;
+        match (num, den) {
+            (Complex, _) | (_, Complex) => Notation::from(Complex),
+
+            (Undefined, _) | (_, Undefined) | (_, Number(Num { value: 0 })) => {
+                Notation::from(Undefined)
+            }
+
+            (Number(Num { value: 0 }), _) => Notation::from(0),
+
+            (num @ (Huge | NegativeHuge | Epsilon | NegativeEpsilon), den @ Number(_)) => {
+                Notation::from(if num.is_positive() == den.is_positive() {
+                    num
+                } else {
+                    -num
+                })
+            }
+
+            (Number(Num { value: num }), Number(Num { value: den })) => {
+                if den.is_factor_of(num) {
                     // Division leaves no remainder
                     Notation::from(num / den)
                 } else {
@@ -78,49 +91,58 @@ impl Simplify for Fraction {
                 }
             }
 
-            Fraction {
-                num: Atom::Undefined,
-                den: _,
-            }
-            | Fraction {
-                num: _,
-                den: Atom::Undefined,
-            } => {
-                // Propigate undefined
-                Notation::from(Atom::Undefined)
+            (num @ (Huge | NegativeHuge), den @ (Huge | NegativeHuge)) => {
+                Notation::from(if num.is_positive() == den.is_positive() {
+                    Huge
+                } else {
+                    NegativeHuge
+                })
             }
 
-            // All other fractions cannot be simplified but do not propigate
-            _ => Notation::from(self),
+            (num @ (Number(_) | Epsilon | NegativeEpsilon), den @ (Huge | NegativeHuge)) => {
+                Notation::from(if num.is_positive() == den.is_positive() {
+                    Epsilon
+                } else {
+                    NegativeEpsilon
+                })
+            }
+
+            (num, den @ (Epsilon | NegativeEpsilon)) => {
+                Notation::from(if num.is_positive() == den.is_positive() {
+                    Huge
+                } else {
+                    NegativeHuge
+                })
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod simplify_fraction_tests {
-    use super::*;
+    use super::{Atom::*, *};
 
     #[test]
     fn test_denominator_of_1() {
-        for num in 0..10 {
+        for num in 0..=10 {
             let frac = Fraction::from(num);
-            assert_eq!(frac.simplified(), num);
+            assert_eq!(frac.simplify(), num);
         }
     }
 
     #[test]
     fn test_simplifies_to_integer() {
-        for den in 1..10 {
-            for n in 0..10 {
+        for den in 1..=10 {
+            for n in 0..=10 {
                 let frac = Fraction::new(den * n, den);
-                assert_eq!(frac.simplified(), n);
+                assert_eq!(frac.simplify(), n);
             }
         }
     }
 
     #[test]
     fn test_already_simplest() {
-        for den in 2..10 {
+        for den in 2..=10 {
             let frac = Fraction::new(1, den);
             assert_eq!(frac.simplified(), frac);
         }
@@ -128,18 +150,114 @@ mod simplify_fraction_tests {
 
     #[test]
     fn test_simplifies_to_half() {
-        for num in 1..10 {
+        for num in 1..=10 {
             let frac = Fraction::new(num, num * 2);
             let simplest = Fraction::new(1, 2);
-            assert_eq!(frac.simplified(), simplest);
+            assert_eq!(frac.simplify(), simplest);
         }
     }
 
     #[test]
     fn test_division_by_zero() {
-        for num in 1..10 {
-            let frac = Fraction::new(num, 0);
-            assert!(frac.simplified().atom().is_some_and(|x| x.is_undefined()));
+        for num in 1..=10 {
+            let simple = Fraction::new(num, 0).simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_undefined()));
+        }
+    }
+
+    #[test]
+    fn test_positive_division_by_huge() {
+        for num in 1..=10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: Huge,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_positive_epsilon()));
+        }
+    }
+
+    #[test]
+    fn test_negative_division_by_huge() {
+        for num in -1..=-10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: Huge,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_negative_epsilon()));
+        }
+    }
+
+    #[test]
+    fn test_positive_division_by_negative_huge() {
+        for num in 1..=10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: NegativeHuge,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_negative_epsilon()));
+        }
+    }
+
+    #[test]
+    fn test_negative_division_by_negative_huge() {
+        for num in -1..=-10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: NegativeHuge,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_positive_epsilon()));
+        }
+    }
+
+    #[test]
+    fn test_positive_division_by_epsilon() {
+        for num in 1..=10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: Epsilon,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_positive_huge()));
+        }
+    }
+
+    #[test]
+    fn test_negative_division_by_epsilon() {
+        for num in -1..=-10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: Epsilon,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_negative_huge()));
+        }
+    }
+
+    #[test]
+    fn test_positive_division_by_negative_epsilon() {
+        for num in 1..=10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: NegativeEpsilon,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_negative_huge()));
+        }
+    }
+
+    #[test]
+    fn test_negative_division_by_negative_epsilon() {
+        for num in -1..=-10 {
+            let simple = Fraction {
+                num: num.into(),
+                den: Epsilon,
+            }
+            .simplify();
+            assert!(simple.atom().is_some_and(|x| x.is_positive_huge()));
         }
     }
 }
