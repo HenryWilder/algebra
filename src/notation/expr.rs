@@ -41,7 +41,7 @@ use simplify::Simplify;
 /// assert_ne!(a, b); // Even though they are equivalent mathematically
 /// assert_eq!(a.simplified(), Notation::Expr(b)); // They need to be simplified first
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     /// A fraction.
     ///

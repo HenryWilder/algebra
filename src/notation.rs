@@ -43,7 +43,7 @@ use expr::{fraction::Fraction, radical::Radical, Expr};
 ///     unreachable!();
 /// }
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Notation {
     /// The smallest unit, a single value.
     ///
