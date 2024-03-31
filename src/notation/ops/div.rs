@@ -91,4 +91,10 @@ mod div_tests {
         let zero = Notation::from(0) / Notation::from(Huge);
         assert_eq!(zero, 0)
     }
+
+    #[test]
+    fn test_fraction_over_fraction() {
+        let zero = Notation::from(0) / Notation::from(Huge);
+        assert_eq!(zero, 0)
+    }
 }
