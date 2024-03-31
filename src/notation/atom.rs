@@ -18,121 +18,130 @@ pub enum Atom {
     /// Any number divided by zero.
     Undefined,
 
-    /// A number which isn't infinite, but is too large to be operated on.
+    /// A number which isn't infinite, but whose magnitude is too large to be operated on.
     Huge,
+
+    /// A negative number which isn't infinite, but whose magnitude is too large to be operated on.
+    NegativeHuge,
 
     /// A fraction which isn't zero, but is too small to be operated on.
     Epsilon,
+
+    /// A negative fraction which isn't zero, but is too small to be operated on.
+    NegativeEpsilon,
 }
 
+impl std::ops::Neg for Atom {
+    type Output = Atom;
+
+    fn neg(self) -> Self::Output {
+        match self {
+            Atom::Number(n) => Atom::Number(-n),
+            Complex => Complex,
+            Undefined => Undefined,
+            Huge => NegativeHuge,
+            NegativeHuge => Huge,
+            Epsilon => NegativeEpsilon,
+            NegativeEpsilon => Epsilon,
+        }
+    }
+}
+
+macro_rules! symbol {
+    [Imaginary] => ("𝑖");
+    [EmptySet] => ("∅");
+    [Huge] => ("𝓗");
+    [Epsilon] => ("ε");
+}
+
+use Atom::*;
+
 impl Atom {
-    /// If [`Number`][Atom::Number], returns its value. Otherwise returns [`None`].
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::{Atom, number::Number};
-    /// let number = Atom::from(5);
-    /// assert_eq!(number.number(), Some(Number::from(5)));
-    /// let undefined = Atom::Undefined;
-    /// assert_eq!(undefined.number(), None);
-    /// ```
+    /// If [`Atom::Number`], returns its [`Number`]. Otherwise returns [`None`].
     pub fn number(self) -> Option<Number> {
         match self {
-            Atom::Number(n) => Some(n),
+            Number(n) => Some(n),
             _ => None,
         }
     }
 
-    /// Returns true for [`Number`][Atom::Number], false otherwise.
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::Atom;
-    /// let number = Atom::from(5);
-    /// assert!(number.is_number());
-    /// let undefined = Atom::Undefined;
-    /// assert!(!undefined.is_number());
-    /// ```
+    /// Returns true for [`Atom::Number`], false otherwise.
     pub fn is_number(&self) -> bool {
         match self {
-            Atom::Number(_) => true,
+            Number(_) => true,
             _ => false,
         }
     }
 
-    /// Returns true for [`Complex`][Atom::Complex], false otherwise.
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::Atom;
-    /// let comlpex = Atom::Complex;
-    /// assert!(comlpex.is_complex());
-    /// let undefined = Atom::Undefined;
-    /// assert!(!undefined.is_complex());
-    /// ```
+    /// Returns true for [`Complex`], false otherwise.
     pub fn is_complex(&self) -> bool {
         match self {
-            Atom::Complex => true,
+            Complex => true,
             _ => false,
         }
     }
 
-    /// Returns true for [`Undefined`][Atom::Undefined], false otherwise.
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::Atom;
-    /// let undefined = Atom::Undefined;
-    /// assert!(undefined.is_undefined());
-    /// let number = Atom::from(5);
-    /// assert!(!number.is_undefined());
-    /// ```
+    /// Returns true for [`Undefined`], false otherwise.
     pub fn is_undefined(&self) -> bool {
         match self {
-            Atom::Undefined => true,
+            Undefined => true,
             _ => false,
         }
     }
 
-    /// Returns true for [`Huge`][Atom::Huge], false otherwise.
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::Atom;
-    /// let huge = Atom::Huge;
-    /// assert!(huge.is_huge());
-    /// let undefined = Atom::Undefined;
-    /// assert!(!undefined.is_huge());
-    /// ```
+    /// Returns true for [`Huge`] and [`NegativeHuge`], false otherwise.
     pub fn is_huge(&self) -> bool {
         match self {
-            Atom::Huge => true,
+            Huge | NegativeHuge => true,
             _ => false,
         }
     }
 
-    /// Returns true for [`Epsilon`][Atom::Epsilon], false otherwise.
-    ///
-    /// Example
-    /// ```
-    /// # use crate::algebra::notation::atom::Atom;
-    /// let epsilon = Atom::Epsilon;
-    /// assert!(epsilon.is_epsilon());
-    /// let undefined = Atom::Undefined;
-    /// assert!(!undefined.is_epsilon());
-    /// ```
+    /// Returns true for [`Huge`], false otherwise.
+    pub fn is_positive_huge(&self) -> bool {
+        match self {
+            Huge => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true for [`Huge`], false otherwise.
+    pub fn is_negative_huge(&self) -> bool {
+        match self {
+            NegativeHuge => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true for [`Epsilon`] and [`NegativeEpsilon`], false otherwise.
     pub fn is_epsilon(&self) -> bool {
         match self {
-            Atom::Epsilon => true,
+            Epsilon | NegativeEpsilon => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true for [`Epsilon`], false otherwise.
+    pub fn is_positive_epsilon(&self) -> bool {
+        match self {
+            Epsilon => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true for [`NegativeEpsilon`], false otherwise.
+    pub fn is_negative_epsilon(&self) -> bool {
+        match self {
+            NegativeEpsilon => true,
             _ => false,
         }
     }
 }
 
 impl From<i32> for Atom {
-    /// Construct an [`Algebraic Atomic Number`][Atom::Number] from an integer.
+    /// Construct an [`Atom::Number`] from an integer.
     fn from(value: i32) -> Self {
-        Atom::Number(Number::from(value))
+        Number(Number::from(value))
     }
 }
 
@@ -140,27 +149,29 @@ impl std::fmt::Display for Atom {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Atom::*;
         match self {
-            Number(num) => num.fmt(f),
-            Complex => "𝑖".fmt(f),
-            Undefined => "∅".fmt(f),
-            Huge => "𝓗".fmt(f),
-            Epsilon => "ε".fmt(f),
+            Number(n) => n.fmt(f),
+            Complex => symbol![Imaginary].fmt(f),
+            Undefined => symbol![EmptySet].fmt(f),
+            Huge => symbol![Huge].fmt(f),
+            NegativeHuge => concat!("-", symbol![Huge]).fmt(f),
+            Epsilon => symbol![Epsilon].fmt(f),
+            NegativeEpsilon => concat!("-", symbol![Epsilon]).fmt(f),
         }
     }
 }
 
 impl std::cmp::PartialEq for Atom {
-    /// In the current implementation, only [`Number`][Atom::Number]s can be meaningfully tested for equality.
+    /// In the current implementation, only [`Atom::Number`]s can be meaningfully tested for equality.
     ///
-    /// [`Complex`][Atom::Complex], [`Huge`][Atom::Huge], and [`Epsilon`][Atom::Epsilon]
+    /// [`Complex`], [`Huge`], and [`Epsilon`]
     /// do not store distinguishing information, despite equality being mathematical defined.
     ///
-    /// [`Undefined`][Atom::Undefined] equality however, is **not** mathematically defined.\
-    /// Two instances of $\frac{1}{0}$ aren't meaningfully equal; similar to [`NAN`][std::f32::NAN].
+    /// [`Undefined`] equality however, is **not** mathematically defined.\
+    /// Two instances of 1/0 aren't meaningfully equal; similar to [`NAN`][std::f32::NAN].
     fn eq(&self, other: &Self) -> bool {
         use Atom::*;
         match (self, other) {
-            (Number(num_a), Number(num_b)) => num_a == num_b,
+            (Number(a), Number(b)) => a == b,
             _ => false,
         }
     }
@@ -180,7 +191,7 @@ impl std::cmp::PartialEq<Number> for Atom {
 impl std::cmp::PartialEq<i32> for Atom {
     fn eq(&self, other: &i32) -> bool {
         match self {
-            Atom::Number(n) => n == other,
+            Number(n) => n == other,
             _ => false,
         }
     }

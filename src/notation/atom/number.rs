@@ -13,11 +13,25 @@ impl std::fmt::Display for Number {
     }
 }
 
+impl std::ops::Neg for Number {
+    type Output = Number;
+
+    fn neg(self) -> Self::Output {
+        Self { value: -self.value }
+    }
+}
+
 // # Conversion
 
 impl From<i32> for Number {
     fn from(value: i32) -> Self {
         Self { value }
+    }
+}
+
+impl From<Number> for i32 {
+    fn from(value: Number) -> Self {
+        value.value
     }
 }
 

@@ -2,6 +2,7 @@
 
 pub mod atom;
 pub mod expr;
+pub mod ops;
 
 use atom::{number::Number, Atom};
 use expr::{fraction::Fraction, radical::Radical, Expr};
