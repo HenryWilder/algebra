@@ -1,16 +1,13 @@
 //! Algebraic division
 
 #[allow(unused_imports)]
-use crate::notation::{
-    atom::{
-        number::Number,
-        Atom::{self, *},
-    },
-    expr::{fraction::Fraction, simplify::Simplify, Expr},
-    Notation,
+use crate::sym::{
+    atom::Atom::{self, *},
+    expr::Expr,
+    Sym,
 };
 
-impl std::ops::Div for Notation {
+impl std::ops::Div for Sym {
     type Output = Self;
 
     /// Divide two values.
@@ -22,26 +19,7 @@ impl std::ops::Div for Notation {
     /// If the result an integer, returns a [`Number`] with the value of the result.\
     /// Otherwise returns a [`Fraction`].
     fn div(self, rhs: Self) -> Self::Output {
-        match (self, rhs) {
-            (Notation::Atom(num), Notation::Atom(den)) => Fraction { num, den }.simplify(),
-
-            (Notation::Expr(Expr::Fraction(frac_num)), Notation::Atom(den)) => {
-                if let Notation::Atom(num) = frac_num.simplify() {
-                    Fraction { num, den }.simplify()
-                } else {
-                    todo!()
-                }
-            }
-            (Notation::Atom(num), Notation::Expr(Expr::Fraction(frac_den))) => {
-                if let Notation::Atom(den) = frac_den.simplify() {
-                    Fraction { num, den }.simplify()
-                } else {
-                    todo!()
-                }
-            }
-
-            _ => todo!(),
-        }
+        todo!()
     }
 }
 
@@ -52,28 +30,28 @@ mod div_tests {
     #[test]
     fn test_over_one_division() {
         for num in -10..=-10 {
-            assert_eq!(Notation::from(num) / Notation::from(1), num)
+            assert_eq!(Sym::Atom(Num(num)) / Sym::Atom(Num(1)), num)
         }
     }
 
     #[test]
     fn test_over_zero_division() {
         for num in -10..=-10 {
-            let undefined = (Notation::from(num) / Notation::from(0)).atom().unwrap();
+            let undefined = (Sym::Atom(Num(num)) / Sym::Atom(Num(0))).atom().unwrap();
             assert!(undefined.is_undefined())
         }
     }
 
     #[test]
     fn test_huge_division() {
-        let huge = (Notation::from(Huge) / Notation::from(1)).atom().unwrap();
+        let huge = (Sym::Atom(Huge) / Sym::Atom(Num(1))).atom().unwrap();
         assert!(huge.is_positive_huge())
     }
 
     #[test]
     fn test_positive_over_huge_is_epsilon() {
         for num in 1..=10 {
-            let epsilon = (Notation::from(num) / Notation::from(Huge)).atom().unwrap();
+            let epsilon = (Sym::Atom(Num(num)) / Sym::Atom(Huge)).atom().unwrap();
             assert!(epsilon.is_positive_epsilon())
         }
     }
@@ -81,20 +59,20 @@ mod div_tests {
     #[test]
     fn test_negative_over_huge_is_negative_epsilon() {
         for num in -1..=-10 {
-            let epsilon = (Notation::from(num) / Notation::from(Huge)).atom().unwrap();
+            let epsilon = (Sym::Atom(Num(num)) / Sym::Atom(Huge)).atom().unwrap();
             assert!(epsilon.is_negative_epsilon())
         }
     }
 
     #[test]
     fn test_zero_over_huge_is_zero() {
-        let zero = Notation::from(0) / Notation::from(Huge);
+        let zero = Sym::Atom(Num(0)) / Sym::Atom(Huge);
         assert_eq!(zero, 0)
     }
 
     #[test]
     fn test_fraction_over_fraction() {
-        let zero = Notation::from(0) / Notation::from(Huge);
+        let zero = Sym::Atom(Num(0)) / Sym::Atom(Huge);
         assert_eq!(zero, 0)
     }
 }

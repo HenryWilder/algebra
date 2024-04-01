@@ -1,25 +1,22 @@
 //! Algebraic multiplication
 
-use crate::notation::{
-    atom::{
-        number::Number,
-        Atom::{self, *},
-    },
-    Notation,
+use crate::sym::{
+    atom::Atom::{self, *},
+    Sym,
 };
 
 /// If the result overflows, returns [`Huge`].\
 /// If the result underflows, returns [`NegativeHuge`].\
 /// Otherwise returns a [`Number`] with the value of the result.
-fn algebraic_mul(lhs: i32, rhs: i32) -> Notation {
+fn algebraic_mul(lhs: i32, rhs: i32) -> Sym {
     match lhs.checked_mul(rhs) {
         // All is well
-        Some(prod) => Notation::from(prod),
+        Some(prod) => Sym::Atom(Num(prod)),
 
         // Over or under flow (need to figure out which)
         None => match lhs.saturating_mul(rhs) {
-            i32::MAX => Notation::from(Huge),
-            i32::MIN => Notation::from(NegativeHuge),
+            i32::MAX => Sym::Atom(Huge),
+            i32::MIN => Sym::Atom(NegHuge),
             _ => unreachable!("Saturated over/underflow should be equal to max/min respectively."),
         },
     }
@@ -58,7 +55,7 @@ mod algebraic_mul_tests {
     }
 }
 
-impl std::ops::Mul for Notation {
+impl std::ops::Mul for Sym {
     type Output = Self;
 
     /// Multiply two values.
@@ -67,10 +64,8 @@ impl std::ops::Mul for Notation {
     /// Otherwise returns a [`Number`] with the value of the result.
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (Notation::Atom(atom_a), Notation::Atom(atom_b)) => match (atom_a, atom_b) {
-                (Atom::Number(Number { value: num_a }), Atom::Number(Number { value: num_b })) => {
-                    algebraic_mul(num_a, num_b)
-                }
+            (Sym::Atom(atom_a), Sym::Atom(atom_b)) => match (atom_a, atom_b) {
+                (Atom::Num(num_a), Atom::Num(num_b)) => algebraic_mul(num_a, num_b),
 
                 _ => todo!(),
             },
@@ -87,7 +82,7 @@ mod mul_tests {
     fn test_basic_multiplication() {
         for a in -10..=10 {
             for b in -10..=10 {
-                assert_eq!(Notation::from(a) * Notation::from(b), a * b);
+                assert_eq!(Sym::Atom(Num(a)) * Sym::Atom(Num(b)), a * b);
             }
         }
     }

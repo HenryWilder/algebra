@@ -1,25 +1,22 @@
 //! Algebraic addition and subtraction
 
-use crate::notation::{
-    atom::{
-        number::Number,
-        Atom::{self, *},
-    },
-    Notation,
+use crate::sym::{
+    atom::Atom::{self, *},
+    Sym,
 };
 
 /// If the result overflows, returns [`Huge`].\
 /// If the result underflows, returns [`NegativeHuge`].\
 /// Otherwise returns a [`Number`] with the value of the result.
-fn algebraic_add(lhs: i32, rhs: i32) -> Notation {
+fn algebraic_add(lhs: i32, rhs: i32) -> Sym {
     match lhs.checked_add(rhs) {
         // All is well
-        Some(sum) => Notation::from(sum),
+        Some(sum) => Sym::from(sum),
 
         // Over or under flow (need to figure out which)
         None => match lhs.saturating_add(rhs) {
-            i32::MAX => Notation::from(Huge),
-            i32::MIN => Notation::from(NegativeHuge),
+            i32::MAX => Sym::from(Huge),
+            i32::MIN => Sym::from(NegHuge),
             _ => unreachable!("Saturated over/underflow should be equal to max/min respectively."),
         },
     }
@@ -103,7 +100,7 @@ mod algebraic_add_tests {
     }
 }
 
-impl std::ops::Add for Notation {
+impl std::ops::Add for Sym {
     type Output = Self;
 
     /// Add two values.
@@ -112,10 +109,8 @@ impl std::ops::Add for Notation {
     /// Otherwise returns a [`Number`] with the value of the result.
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (Notation::Atom(atom_a), Notation::Atom(atom_b)) => match (atom_a, atom_b) {
-                (Atom::Number(Number { value: num_a }), Atom::Number(Number { value: num_b })) => {
-                    algebraic_add(num_a, num_b)
-                }
+            (Sym::Atom(atom_a), Sym::Atom(atom_b)) => match (atom_a, atom_b) {
+                (Num(num_a), Atom::Num(num_b)) => algebraic_add(num_a, num_b),
 
                 _ => todo!(),
             },
@@ -124,7 +119,7 @@ impl std::ops::Add for Notation {
     }
 }
 
-impl std::ops::Sub for Notation {
+impl std::ops::Sub for Sym {
     type Output = Self;
 
     /// Subtract two values.
@@ -133,13 +128,13 @@ impl std::ops::Sub for Notation {
     /// Otherwise returns a [`Number`] with the value of the result.
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
-            (Notation::Atom(atom_a), Notation::Atom(atom_b)) => match (atom_a, atom_b) {
-                (Atom::Number(Number { value: num_a }), Atom::Number(Number { value: num_b })) => {
+            (Sym::Atom(atom_a), Sym::Atom(atom_b)) => match (atom_a, atom_b) {
+                (Atom::Num(num_a), Atom::Num(num_b)) => {
                     match num_b.checked_neg() {
                         Some(sub_b) => algebraic_add(num_a, sub_b),
                         // The edge cases where we can salvage lost information are too rare to worry about at the moment.
                         // The fact this case is reached already implies the user is working with numbers dangerously close to Huge anyway.
-                        None => Notation::from(NegativeHuge),
+                        None => Sym::Atom(NegHuge),
                     }
                 }
 
@@ -158,7 +153,7 @@ mod add_tests {
     fn test_basic_addition() {
         for a in -10..=10 {
             for b in -10..=10 {
-                assert_eq!(Notation::from(a) + Notation::from(b), a + b);
+                assert_eq!(Sym::from(a) + Sym::from(b), a + b);
             }
         }
     }

@@ -1,28 +1,6 @@
 //! Functions related to factoring numbers.
 
-use crate::notation::atom::Atom;
-
-/// A single factor of a number.
-///
-/// Produced by [`factors()`][Factoring::factors()].
-pub struct Factor {
-    /// The factor itself.
-    pub common: i32,
-
-    /// The number multiplied by `common` to result in the original number being factored.
-    pub associated: i32,
-}
-
-/// A factor shared among multiple numbers.
-///
-/// Produced by [`common_factors()`].
-pub struct CommonFactor<const COUNT: usize> {
-    /// The factor itself.
-    pub common: i32,
-
-    /// The numbers multiplied by `common` to result in the original numbers being factored.
-    pub associated: [i32; COUNT],
-}
+use crate::sym::atom::{Atom, Atom::*};
 
 /// Trait for types which can be factored.
 pub trait Factoring: Sized {
@@ -42,7 +20,7 @@ pub trait Factoring: Sized {
     fn is_common_multiple_of<const COUNT: usize>(&self, others: &[Self; COUNT]) -> bool;
 
     /// Returns all factors for the given number.
-    fn factors(&self) -> Vec<Factor>;
+    fn factors(&self) -> Vec<(i32, i32)>;
 
     /// Returns the number of factors the given number has.
     ///
@@ -75,11 +53,8 @@ impl Factoring for i32 {
         others.iter().all(|other| self.is_multiple_of(*other))
     }
 
-    fn factors(&self) -> Vec<Factor> {
-        let mut factors = Vec::from([Factor {
-            common: 1,
-            associated: *self,
-        }]);
+    fn factors(&self) -> Vec<(i32, i32)> {
+        let mut factors = Vec::from([(1, *self)]);
 
         let abs_n = self.abs();
 
@@ -87,10 +62,7 @@ impl Factoring for i32 {
         for pot_fac in 2..abs_n {
             if pot_fac.is_factor_of(abs_n) {
                 let fac = pot_fac; // Confirmed
-                factors.push(Factor {
-                    common: fac,
-                    associated: self / fac,
-                });
+                factors.push((fac, self / fac));
             }
         }
 
@@ -126,23 +98,17 @@ impl Factoring for i32 {
 }
 
 /// Given a set of numbers, returns the factors shared between them.
-pub fn common_factors<const COUNT: usize>(ns: [i32; COUNT]) -> Vec<CommonFactor<COUNT>> {
+pub fn common_factors<const COUNT: usize>(ns: [i32; COUNT]) -> Vec<(i32, [i32; COUNT])> {
     assert!(COUNT > 0, "Empty set has no factors.");
 
-    let mut factors = Vec::from([CommonFactor {
-        common: 1,
-        associated: ns,
-    }]);
+    let mut factors = Vec::from([(1, ns)]);
 
     let abs_ns = ns.map(|n| n.abs());
     let abs_min = *abs_ns.iter().min().unwrap();
 
     for fac in 2..=abs_min {
         if fac.is_common_factor_of(&abs_ns) {
-            factors.push(CommonFactor {
-                common: fac,
-                associated: ns.map(|x| x / fac),
-            });
+            factors.push((fac, ns.map(|x| x / fac)));
         }
     }
 
@@ -198,7 +164,7 @@ pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> Atom {
     for n in &ns {
         match prod.checked_mul(*n) {
             Some(p) => prod = p,
-            None => return Atom::Huge,
+            None => return Huge,
         }
     }
     let prod = prod;
@@ -208,11 +174,11 @@ pub fn lcm<const COUNT: usize>(ns: [i32; COUNT]) -> Atom {
 
     for lcm in abs_max..prod {
         if lcm.is_common_multiple_of(&abs_ns) {
-            return Atom::from(lcm);
+            return Num(lcm);
         }
     }
 
-    Atom::from(prod)
+    Num(prod)
 }
 
 #[cfg(test)]

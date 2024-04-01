@@ -1,14 +1,11 @@
 //! Algebraic exponentiation
 
-use crate::notation::{
-    atom::{
-        number::Number as Num,
-        Atom::{self, *},
-    },
-    Notation,
+use crate::sym::{
+    atom::Atom::{self, *},
+    Sym,
 };
 
-impl Notation {
+impl Sym {
     /// Puts one value to the power of another.
     ///
     /// If the result overflows, returns [`Huge`].\
@@ -18,11 +15,11 @@ impl Notation {
     /// Otherwise returns a [`Number`] with the value of the result.
     pub fn pow(self, rhs: Self) -> Self {
         match self {
-            Notation::Atom(Number(Num { value: 0 | 1 })) => self,
+            Sym::Atom(Num(0 | 1)) => self,
             base => match rhs {
-                Notation::Atom(atom) => match atom {
-                    Number(Num { value: exp }) => {
-                        let mut result = Notation::from(1);
+                Sym::Atom(atom) => match atom {
+                    Num(exp) => {
+                        let mut result = Sym::Atom(Num(1));
                         for _ in 0..exp.abs() {
                             result = result * base.clone(); // This seems needlessly expensive...
                         }
@@ -30,17 +27,17 @@ impl Notation {
                         if exp.is_positive() {
                             result
                         } else {
-                            Notation::from(1) / result
+                            Sym::Atom(Num(1)) / result
                         }
                     }
                     Complex => todo!(),
                     Undefined => todo!(),
-                    Huge => Notation::from(Huge), // is Huge even or odd??
-                    NegativeHuge => Notation::from(Epsilon),
+                    Huge => Sym::Atom(Huge), // is Huge even or odd??
+                    NegHuge => Sym::Atom(Epsilon),
                     Epsilon => todo!(),
-                    NegativeEpsilon => todo!(),
+                    NegEpsilon => todo!(),
                 },
-                Notation::Expr(_expr) => todo!(),
+                Sym::Expr(_expr) => todo!(),
             },
         }
     }
@@ -53,7 +50,7 @@ mod pow_test {
     #[test]
     fn test_pow_simple() {
         for exp in 0..=10 {
-            assert_eq!(Notation::from(1).pow(Notation::from(exp)), 1);
+            assert_eq!(Sym::Atom(Num(1)).pow(Sym::Atom(Num(exp))), 1);
         }
     }
 }

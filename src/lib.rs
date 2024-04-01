@@ -3,10 +3,10 @@
 //! A library for handling algebra.
 
 pub mod factor;
-pub mod notation;
+pub mod sym;
 
 use factor::Factoring;
-use notation::Notation;
+use sym::Sym;
 
 /// Provides additional true/false information about numbers
 pub trait NumericFlags {
