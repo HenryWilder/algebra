@@ -2,10 +2,12 @@
 
 pub mod atom;
 pub mod expr;
+pub mod form;
 pub mod ops;
 
 use atom::Atom;
 use expr::Expr;
+use form::Form;
 
 /// "Symbol" - Algebraic Notation.
 ///
@@ -21,15 +23,14 @@ use expr::Expr;
 /// </div>
 #[derive(Debug, PartialEq, Clone)]
 pub enum Sym {
-    /// The smallest unit, a single value.
-    ///
-    /// See [`Atom`].
+    #[doc = include_str!("sym/atom.md")]
     Atom(Atom),
 
-    /// A combination of atomics, able to be simplified.
-    ///
-    /// See [`Expr`]
+    #[doc = include_str!("sym/expr.md")]
     Expr(Expr),
+
+    #[doc = include_str!("sym/form.md")]
+    Form(Form),
 }
 
 impl std::fmt::Display for Sym {
@@ -38,6 +39,7 @@ impl std::fmt::Display for Sym {
         match self {
             Atom(atom) => atom.fmt(f),
             Expr(expr) => expr.fmt(f),
+            Form(form) => form.fmt(f),
         }
     }
 }

@@ -27,14 +27,17 @@ impl Sym {
                             Sym::Atom(Num(1)) / result
                         }
                     }
-                    Complex => todo!(),
+                    Var(_) => todo!(),
+                    Imaginary(_) => todo!(),
                     Undefined => todo!(),
                     Huge => Sym::Atom(Huge), // is Huge even or odd??
                     NegHuge => Sym::Atom(Epsilon),
                     Epsilon => todo!(),
                     NegEpsilon => todo!(),
+                    Unknown => todo!(),
                 },
                 Sym::Expr(_expr) => todo!(),
+                Sym::Form(_form) => todo!(),
             },
         }
     }
