@@ -63,12 +63,12 @@ pub enum Expr {
 }
 
 impl Expr {
-    /// Returns true if the expression represents a [`Fraction`], false otherwise.
+    /// Returns true if the expression represents a [`Fraction`][Expr::Fraction], false otherwise.
     pub fn is_fraction(&self) -> bool {
         matches!(self, Expr::Fraction { num: _, den: _ })
     }
 
-    /// Returns true if the expression represents a [`Radical`], false otherwise.
+    /// Returns true if the expression represents a [`Radical`][Expr::Radical], false otherwise.
     pub fn is_radical(&self) -> bool {
         matches!(self, Expr::Radical { coef: _, rad: _ })
     }

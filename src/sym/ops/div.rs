@@ -9,11 +9,11 @@ impl std::ops::Div for Sym {
     /// Divide two values.
     ///
     /// If the result overflows, returns [`Huge`].\
-    /// If the result underflows, returns [`NegativeHuge`].\
-    /// If the result has a [`Huge`] or [`NegativeHuge`] denominator, returns [`Epsilon`] if positive overall and [`NegativeEpsilon`] if overall negative.\
+    /// If the result underflows, returns [`NegHuge`].\
+    /// If the result has a [`Huge`] or [`NegHuge`] denominator, returns [`Epsilon`] if positive overall and [`NegEpsilon`] if overall negative.\
     /// If the result has a denominator of 0, or contains [`Undefined`], returns [`Undefined`].\
-    /// If the result an integer, returns a [`Number`] with the value of the result.\
-    /// Otherwise returns a [`Fraction`].
+    /// If the result an integer, returns a [`Num`] with the value of the result.\
+    /// Otherwise returns a [`Fraction`][Expr::Fraction].
     fn div(self, _rhs: Self) -> Self::Output {
         todo!()
     }

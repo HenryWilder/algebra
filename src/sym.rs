@@ -43,7 +43,7 @@ impl std::fmt::Display for Sym {
 }
 
 impl Sym {
-    /// If the notation represents an [`Atom`][Atom], returns that atom. Otherwise returns [`None`].
+    /// If the notation represents an [`Atom`], returns that atom. Otherwise returns [`None`].
     pub fn atom(self) -> Option<Atom> {
         match self {
             Sym::Atom(atom) => Some(atom),
@@ -51,12 +51,12 @@ impl Sym {
         }
     }
 
-    /// Returns true if the notation represents an [`Atom`][Atom], false otherwise.
+    /// Returns true if the notation represents an [`Atom`], false otherwise.
     pub fn is_atom(&self) -> bool {
         matches!(self, Sym::Atom(_))
     }
 
-    /// If the notation represents an [`Expr`][Expr], returns that expr. Otherwise returns [`None`].
+    /// If the notation represents an [`Expr`], returns that expr. Otherwise returns [`None`].
     pub fn expr(self) -> Option<Expr> {
         match self {
             Sym::Expr(expr) => Some(expr),
@@ -64,7 +64,7 @@ impl Sym {
         }
     }
 
-    /// Returns true if the notation represents an [`Expr`][Expr], false otherwise.
+    /// Returns true if the notation represents an [`Expr`], false otherwise.
     pub fn is_expr(&self) -> bool {
         matches!(self, Sym::Expr(_))
     }

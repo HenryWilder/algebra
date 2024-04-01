@@ -9,7 +9,7 @@ impl Sym {
     /// If the result has a [`Huge`] denominator, returns [`Epsilon`].\
     /// If the result has a denominator of 0, returns [`Undefined`].\
     /// If the base and exponent are both negative, returns [`Complex`].\
-    /// Otherwise returns a [`Number`] with the value of the result.
+    /// Otherwise returns a [`Num`] with the value of the result.
     pub fn pow(self, rhs: Self) -> Self {
         match self {
             Sym::Atom(Num(0 | 1)) => self,

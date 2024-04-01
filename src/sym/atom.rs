@@ -53,7 +53,7 @@ macro_rules! symbol {
 use Atom::*;
 
 impl Atom {
-    /// If [`Atom::Number`], returns its [`Number`]. Otherwise returns [`None`].
+    /// If [`Atom::Num`], returns its value. Otherwise returns [`None`].
     pub fn number(self) -> Option<i32> {
         match self {
             Num(n) => Some(n),
@@ -61,13 +61,13 @@ impl Atom {
         }
     }
 
-    /// Returns true for [`Atom::Number`], false otherwise.
+    /// Returns true for [`Atom::Num`], false otherwise.
     pub fn is_number(&self) -> bool {
         matches!(self, Num(_))
     }
 
     /// Returns true for
-    /// - [`Atom::Number`] where >= 0
+    /// - [`Atom::Num`] where >= 0
     /// - [`Huge`]
     /// - [`Epsilon`]
     /// and false otherwise.
@@ -76,9 +76,9 @@ impl Atom {
     }
 
     /// Returns true for
-    /// - [`Atom::Number`] where < 0
-    /// - [`NegativeHuge`]
-    /// - [`NegativeEpsilon`]
+    /// - [`Atom::Num`] where < 0
+    /// - [`NegHuge`]
+    /// - [`NegEpsilon`]
     /// and false otherwise.
     pub fn is_negative(&self) -> bool {
         matches!(self, Num(..=-1) | NegHuge | NegEpsilon)
@@ -94,7 +94,7 @@ impl Atom {
         matches!(self, Undefined)
     }
 
-    /// Returns true for [`Huge`] and [`NegativeHuge`], false otherwise.
+    /// Returns true for [`Huge`] and [`NegHuge`], false otherwise.
     pub fn is_huge(&self) -> bool {
         matches!(self, Huge | NegHuge)
     }
@@ -109,7 +109,7 @@ impl Atom {
         matches!(self, NegHuge)
     }
 
-    /// Returns true for [`Epsilon`] and [`NegativeEpsilon`], false otherwise.
+    /// Returns true for [`Epsilon`] and [`NegEpsilon`], false otherwise.
     pub fn is_epsilon(&self) -> bool {
         matches!(self, Epsilon | NegEpsilon)
     }
@@ -119,7 +119,7 @@ impl Atom {
         matches!(self, Epsilon)
     }
 
-    /// Returns true for [`NegativeEpsilon`], false otherwise.
+    /// Returns true for [`NegEpsilon`], false otherwise.
     pub fn is_negative_epsilon(&self) -> bool {
         matches!(self, NegEpsilon)
     }
@@ -141,7 +141,7 @@ impl std::fmt::Display for Atom {
 }
 
 impl std::cmp::PartialEq for Atom {
-    /// In the current implementation, only [`Atom::Number`]s can be meaningfully tested for equality.
+    /// In the current implementation, only [`Atom::Num`]s can be meaningfully tested for equality.
     ///
     /// [`Complex`], [`Huge`], and [`Epsilon`]
     /// do not store distinguishing information, despite equality being mathematical defined.

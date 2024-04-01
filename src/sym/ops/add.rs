@@ -6,8 +6,8 @@ use crate::sym::{
 };
 
 /// If the result overflows, returns [`Huge`].\
-/// If the result underflows, returns [`NegativeHuge`].\
-/// Otherwise returns a [`Number`] with the value of the result.
+/// If the result underflows, returns [`NegHuge`].\
+/// Otherwise returns a [`Num`] with the value of the result.
 fn algebraic_add(lhs: i32, rhs: i32) -> Sym {
     match lhs.checked_add(rhs) {
         // All is well
@@ -106,7 +106,7 @@ impl std::ops::Add for Sym {
     /// Add two values.
     ///
     /// If the result overflows, returns [`Huge`].\
-    /// Otherwise returns a [`Number`] with the value of the result.
+    /// Otherwise returns a [`Num`] with the value of the result.
     fn add(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Sym::Atom(atom_a), Sym::Atom(atom_b)) => match (atom_a, atom_b) {
@@ -125,7 +125,7 @@ impl std::ops::Sub for Sym {
     /// Subtract two values.
     ///
     /// If the result overflows, returns [`Huge`].\
-    /// Otherwise returns a [`Number`] with the value of the result.
+    /// Otherwise returns a [`Num`] with the value of the result.
     fn sub(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (Sym::Atom(atom_a), Sym::Atom(atom_b)) => match (atom_a, atom_b) {
