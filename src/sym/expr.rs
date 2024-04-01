@@ -2,8 +2,13 @@
 
 use crate::{
     factor::{gcf, Factoring},
-    sym::{atom::Atom, Sym},
+    sym::{
+        atom::Atom::{self, *},
+        Sym::{self, *},
+    },
 };
+
+use self::Expr::*;
 
 /// An expression capable of being simplified.
 pub trait Simplify {
@@ -76,7 +81,6 @@ impl Expr {
 
 impl Simplify for Expr {
     fn simplify(self) -> Sym {
-        use {Atom::*, Expr::*};
         match self {
             Fraction { num, den } => {
                 match (num, den) {
@@ -130,10 +134,10 @@ impl Simplify for Expr {
                     0 => Sym::Atom(Num(0)),
                     1 => Sym::Atom(Num(coef)),
                     2.. => {
-                        if let Some(root) = sqrt_i(rad) {
+                        if let Atom(Num(root)) = sqrt_i(rad) {
                             // Simple
 
-                            Sym::Atom(Num(coef * root))
+                            Atom(Num(coef * root))
                         } else {
                             // Perfect squares
 
@@ -147,7 +151,7 @@ impl Simplify for Expr {
                                     [(common, associated), (associated, common)];
 
                                 for (a, b) in permutations {
-                                    if let Some(a_root) = sqrt_i(a) {
+                                    if let Atom(Num(a_root)) = sqrt_i(a) {
                                         if a_root > gps_fac {
                                             (gps_fac, gps_mul) = (a_root, b);
                                         }
@@ -155,7 +159,7 @@ impl Simplify for Expr {
                                 }
                             }
 
-                            Sym::Expr(Radical {
+                            Expr(Radical {
                                 coef: gps_fac,
                                 rad: gps_mul,
                             })
@@ -168,18 +172,18 @@ impl Simplify for Expr {
 }
 
 /// If the square root of n can be expressed as an integer, returns that integer. Otherwise returns [`None`].
-pub fn sqrt_i(n: i32) -> Option<i32> {
+pub fn sqrt_i(n: i32) -> Sym {
     use std::cmp::Ordering::*;
     match n {
-        ..=-1 => None,
-        0..=1 => Some(n),
+        ..=-1 => Atom(Complex),
+        0 | 1 => Atom(Num(n)), // Zero and one, specifically, are their own square roots
         2.. => {
             let mut root = 2;
             loop {
                 match (root * root).cmp(&n) {
                     Less => root += 1,
-                    Equal => break Some(root),
-                    Greater => break None,
+                    Equal => break Atom(Num(root)),
+                    Greater => break Expr(Radical { coef: 1, rad: n }),
                 }
             }
         }
@@ -188,7 +192,6 @@ pub fn sqrt_i(n: i32) -> Option<i32> {
 
 impl std::fmt::Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use Expr::*;
         match self {
             Fraction { num, den } => format!("{num}/{den}").fmt(f),
 
@@ -203,7 +206,7 @@ impl std::fmt::Display for Expr {
 
 #[cfg(test)]
 mod simplify_fraction_tests {
-    use super::{Atom::*, *};
+    use super::*;
 
     #[test]
     fn test_denominator_of_1() {

@@ -33,12 +33,12 @@ impl std::ops::Neg for Atom {
     fn neg(self) -> Self::Output {
         match self {
             Num(n) => Num(-n),
-            Complex => Complex,
-            Undefined => Undefined,
             Huge => NegHuge,
             NegHuge => Huge,
             Epsilon => NegEpsilon,
             NegEpsilon => Epsilon,
+
+            signless => signless,
         }
     }
 }
