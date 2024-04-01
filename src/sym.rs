@@ -53,10 +53,7 @@ impl Sym {
 
     /// Returns true if the notation represents an [`Atom`][Atom], false otherwise.
     pub fn is_atom(&self) -> bool {
-        match self {
-            Sym::Atom(_) => true,
-            _ => false,
-        }
+        matches!(self, Sym::Atom(_))
     }
 
     /// If the notation represents an [`Expr`][Expr], returns that expr. Otherwise returns [`None`].
@@ -69,10 +66,7 @@ impl Sym {
 
     /// Returns true if the notation represents an [`Expr`][Expr], false otherwise.
     pub fn is_expr(&self) -> bool {
-        match self {
-            Sym::Expr(_) => true,
-            _ => false,
-        }
+        matches!(self, Sym::Expr(_))
     }
 }
 

@@ -63,10 +63,7 @@ impl Atom {
 
     /// Returns true for [`Atom::Number`], false otherwise.
     pub fn is_number(&self) -> bool {
-        match self {
-            Num(_) => true,
-            _ => false,
-        }
+        matches!(self, Num(_))
     }
 
     /// Returns true for
@@ -75,10 +72,7 @@ impl Atom {
     /// - [`Epsilon`]
     /// and false otherwise.
     pub fn is_positive(&self) -> bool {
-        match self {
-            Num(0..) | Huge | Epsilon => true,
-            _ => false,
-        }
+        matches!(self, Num(0..) | Huge | Epsilon)
     }
 
     /// Returns true for
@@ -87,74 +81,47 @@ impl Atom {
     /// - [`NegativeEpsilon`]
     /// and false otherwise.
     pub fn is_negative(&self) -> bool {
-        match self {
-            Num(..=-1) | NegHuge | NegEpsilon => true,
-            _ => false,
-        }
+        matches!(self, Num(..=-1) | NegHuge | NegEpsilon)
     }
 
     /// Returns true for [`Complex`], false otherwise.
     pub fn is_complex(&self) -> bool {
-        match self {
-            Complex => true,
-            _ => false,
-        }
+        matches!(self, Complex)
     }
 
     /// Returns true for [`Undefined`], false otherwise.
     pub fn is_undefined(&self) -> bool {
-        match self {
-            Undefined => true,
-            _ => false,
-        }
+        matches!(self, Undefined)
     }
 
     /// Returns true for [`Huge`] and [`NegativeHuge`], false otherwise.
     pub fn is_huge(&self) -> bool {
-        match self {
-            Huge | NegHuge => true,
-            _ => false,
-        }
+        matches!(self, Huge | NegHuge)
     }
 
     /// Returns true for [`Huge`], false otherwise.
     pub fn is_positive_huge(&self) -> bool {
-        match self {
-            Huge => true,
-            _ => false,
-        }
+        matches!(self, Huge)
     }
 
     /// Returns true for [`Huge`], false otherwise.
     pub fn is_negative_huge(&self) -> bool {
-        match self {
-            NegHuge => true,
-            _ => false,
-        }
+        matches!(self, NegHuge)
     }
 
     /// Returns true for [`Epsilon`] and [`NegativeEpsilon`], false otherwise.
     pub fn is_epsilon(&self) -> bool {
-        match self {
-            Epsilon | NegEpsilon => true,
-            _ => false,
-        }
+        matches!(self, Epsilon | NegEpsilon)
     }
 
     /// Returns true for [`Epsilon`], false otherwise.
     pub fn is_positive_epsilon(&self) -> bool {
-        match self {
-            Epsilon => true,
-            _ => false,
-        }
+        matches!(self, Epsilon)
     }
 
     /// Returns true for [`NegativeEpsilon`], false otherwise.
     pub fn is_negative_epsilon(&self) -> bool {
-        match self {
-            NegEpsilon => true,
-            _ => false,
-        }
+        matches!(self, NegEpsilon)
     }
 }
 

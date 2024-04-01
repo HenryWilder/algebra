@@ -1,6 +1,6 @@
 //! Functions related to factoring numbers.
 
-use crate::sym::atom::{Atom, Atom::*};
+use crate::sym::atom::Atom::{self, *};
 
 /// Trait for types which can be factored.
 pub trait Factoring: Sized {

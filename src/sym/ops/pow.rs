@@ -1,9 +1,6 @@
 //! Algebraic exponentiation
 
-use crate::sym::{
-    atom::Atom::{self, *},
-    Sym,
-};
+use crate::sym::{atom::Atom::*, Sym};
 
 impl Sym {
     /// Puts one value to the power of another.

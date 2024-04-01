@@ -6,7 +6,6 @@ pub mod factor;
 pub mod sym;
 
 use factor::Factoring;
-use sym::Sym;
 
 /// Provides additional true/false information about numbers
 pub trait NumericFlags {

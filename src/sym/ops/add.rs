@@ -11,12 +11,12 @@ use crate::sym::{
 fn algebraic_add(lhs: i32, rhs: i32) -> Sym {
     match lhs.checked_add(rhs) {
         // All is well
-        Some(sum) => Sym::from(sum),
+        Some(sum) => Sym::Atom(Num(sum)),
 
         // Over or under flow (need to figure out which)
         None => match lhs.saturating_add(rhs) {
-            i32::MAX => Sym::from(Huge),
-            i32::MIN => Sym::from(NegHuge),
+            i32::MAX => Sym::Atom(Huge),
+            i32::MIN => Sym::Atom(NegHuge),
             _ => unreachable!("Saturated over/underflow should be equal to max/min respectively."),
         },
     }
@@ -153,7 +153,7 @@ mod add_tests {
     fn test_basic_addition() {
         for a in -10..=10 {
             for b in -10..=10 {
-                assert_eq!(Sym::from(a) + Sym::from(b), a + b);
+                assert_eq!(Sym::Atom(Num(a)) + Sym::Atom(Num(b)), a + b);
             }
         }
     }

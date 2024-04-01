@@ -1,11 +1,7 @@
 //! Algebraic division
 
 #[allow(unused_imports)]
-use crate::sym::{
-    atom::Atom::{self, *},
-    expr::Expr,
-    Sym,
-};
+use crate::sym::{atom::Atom::*, expr::Expr, Sym};
 
 impl std::ops::Div for Sym {
     type Output = Self;
@@ -18,7 +14,7 @@ impl std::ops::Div for Sym {
     /// If the result has a denominator of 0, or contains [`Undefined`], returns [`Undefined`].\
     /// If the result an integer, returns a [`Number`] with the value of the result.\
     /// Otherwise returns a [`Fraction`].
-    fn div(self, rhs: Self) -> Self::Output {
+    fn div(self, _rhs: Self) -> Self::Output {
         todo!()
     }
 }
